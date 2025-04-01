@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">BatteryStatus</string>
+    <string name="voltage_desc"></string>
+    <string name="current_desc"></string>
+    <string name="temperature_desc"></string>
+    <string name="power_desc"></string>
 </resources>

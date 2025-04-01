@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
             boolean is_charging = intent.getBooleanExtra("is_charging", false);
             double voltage = intent.getDoubleExtra("voltage", 0);
             double current = intent.getDoubleExtra("current", 0);
-            double temp = intent.getDoubleExtra("temperature", 0);
+            double temperature = intent.getDoubleExtra("temperature", 0);
             double mah = intent.getDoubleExtra("mah", 0);
             double power = intent.getDoubleExtra("power", 0);
 
@@ -122,11 +122,17 @@ public class MainActivity extends AppCompatActivity {
             double absolute = Math.abs(current) * 1000f; // A → mA
             mah = absolute * 60;
 
-            _chargingStatus.setText(is_charging ? "charging" : "");
-            _voltage.setText(voltage + " V");
-            _current.setText(String.format("%.4f mA", absolute));
-            _temperature.setText(temp + " °C");
-            _power.setText(String.format("%.6f W %.2f mAh", Math.abs(power), mah));
+            _chargingStatus.setText(is_charging ? "Charging" : "Using");
+            _voltage.setText(String.format("%.3f",voltage));
+            _current.setText(String.format("%.3f", absolute));
+            _temperature.setText(String.format("%.1f", temperature));
+
+            if(is_charging) {
+                _power.setText(String.format("%.3f mAh", mah));
+            }
+            else {
+                _power.setText(String.format("%.2f W", power));
+            }
         }
     };
 }

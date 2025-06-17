@@ -1,5 +1,6 @@
 package com.mcmcx.batterystatus;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.BroadcastReceiver;
@@ -15,6 +16,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -215,9 +217,9 @@ public class MainActivity extends AppCompatActivity {
             // 按每秒计算，这里要转换为mA
             // 每个设备不一样,这里以20mA计算相当于5v就是360w，4v就是228w
             // 目前手机充电不太可能有这么大的充电
-            double milliampere = current;
-            if(current < 20.0) {
-                milliampere = Math.abs(current) * 60.0 * 60.0; // mA
+            double milliampere = Math.abs(current);
+            if(milliampere < 20.0) {
+                milliampere = milliampere * 60.0 * 60.0; // mA
             }
 
             int capacity = intent.getIntExtra("capacity", 0);
@@ -227,7 +229,8 @@ public class MainActivity extends AppCompatActivity {
             _temperature.setText(String.format("%.1f", temperature));
 
             _capacity.setText(String.format("%d", capacity));
-
+            
+            //Toast.makeText(MainActivity.this, String.format("%f", current), Toast.LENGTH_LONG).show();
 
             if(is_charging) {
                 if(!_is_charging) {

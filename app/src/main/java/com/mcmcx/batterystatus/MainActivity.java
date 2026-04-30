@@ -1,6 +1,5 @@
 package com.mcmcx.batterystatus;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.BroadcastReceiver;
@@ -10,13 +9,11 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Debug;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.Locale;
 
@@ -42,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView _capacity;
 
+    private TextView _percentage;
     private TextView _view_timer;
 
     //
@@ -76,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
         _capacity = this.findViewById(R.id.capacity);
 
         _view_timer = this.findViewById(R.id.timer);
+
+        _percentage = this.findViewById(R.id.percentage);
 
         //
         _icon_status.setImageResource(R.drawable.ic_battery);
@@ -130,13 +130,22 @@ public class MainActivity extends AppCompatActivity {
                 //
                 BatteryManager batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
 
-                long current = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW); // 单位: 微安培
+                long currentNow = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+                if (currentNow == Long.MIN_VALUE) {
+                    currentNow = batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_AVERAGE);
+                    if (currentNow == Long.MIN_VALUE) {
+                        currentNow = 0;
+                    }
+                }
 
-                double voltageV = voltage / 1000.0; // 转换为 V
-                double currentMA = current / 1000.0; // 转换为 mA
-                float temperatureC = temperature / 10.0f; // 转换为 °C
+                double voltageV = voltage / 1000.0;
+                double currentMA = currentNow / 1000.0;
+                float temperatureC = temperature / 10.0f;
 
                 int capacity = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER);
+                if (capacity == Integer.MIN_VALUE) {
+                    capacity = 0;
+                }
                 double remaining_capacity = capacity / 1000f;
 
                 Intent intentUpdate = new Intent(BATTERY_STATUS_UPDATE);
@@ -192,11 +201,6 @@ public class MainActivity extends AppCompatActivity {
         _handler.removeCallbacks(_updateTimeRunnable);
     }
 
-//    @Override
-//    public IBinder onBind(Intent intent) {
-//        return null;
-//    }
-
     private final BroadcastReceiver _batteryStatusUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -213,14 +217,9 @@ public class MainActivity extends AppCompatActivity {
             double current = intent.getDoubleExtra("current", 0); //mA
 
             float temperature = intent.getFloatExtra("temperature", 0.0f);
+            float percentage = intent.getFloatExtra("percentage", 0.0f);
 
-            // 按每秒计算，这里要转换为mA
-            // 每个设备不一样,这里以20mA计算相当于5v就是360w，4v就是228w
-            // 目前手机充电不太可能有这么大的充电
             double milliampere = Math.abs(current);
-            if(milliampere < 20.0) {
-                milliampere = milliampere * 60.0 * 60.0; // mA
-            }
 
             int capacity = intent.getIntExtra("capacity", 0);
 
@@ -229,8 +228,7 @@ public class MainActivity extends AppCompatActivity {
             _temperature.setText(String.format("%.1f", temperature));
 
             _capacity.setText(String.format("%d", capacity));
-            
-            //Toast.makeText(MainActivity.this, String.format("%f", current), Toast.LENGTH_LONG).show();
+            _percentage.setText(String.format("%.0f%%", percentage));
 
             if(is_charging) {
                 if(!_is_charging) {
@@ -241,24 +239,23 @@ public class MainActivity extends AppCompatActivity {
                 double power = milliampere / 1000.0 * voltage; // W
 
                 _power.setText(String.format("%.2f", power));
-                _power_suffix.setText("W");
+                _power_suffix.setText(R.string.unit_watt);
 
-                _icon_status.setImageResource(R.drawable.ic_battery);
-                _status_charging.setText("Charging");
+                _icon_status.setImageResource(R.drawable.ic_battery_charging);
+                _status_charging.setText(R.string.charging);
             } else {
                 if(_is_charging) {
                     _timestamp_start = System.currentTimeMillis();
                 }
                 _is_charging = false;
 
-                // 每分钟放电mAh
-                double amperehour = milliampere / 60.0; // mAh
+                double amperehour = milliampere / 60.0; // mAh/m
 
                 _power.setText(String.format("%.1f", amperehour));
-                _power_suffix.setText("mAh/m");
+                _power_suffix.setText(R.string.unit_milliampere_hour_per_min);
 
-                _icon_status.setImageResource(R.drawable.ic_battery_charging);
-                _status_charging.setText("Using");
+                _icon_status.setImageResource(R.drawable.ic_battery);
+                _status_charging.setText(R.string.using);
             }
 
         }

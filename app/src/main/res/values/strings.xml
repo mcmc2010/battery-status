@@ -1,8 +1,28 @@
 <resources>
     <string name="app_name">BatteryStatus</string>
-    <string name="voltage_desc"></string>
-    <string name="current_desc"></string>
-    <string name="temperature_desc"></string>
-    <string name="power_desc"></string>
-    <string name="capacity_desc"></string>
+    <string name="voltage_desc">Voltage</string>
+    <string name="current_desc">Current</string>
+    <string name="temperature_desc">Temperature</string>
+    <string name="power_desc">Power</string>
+    <string name="capacity_desc">Capacity</string>
+    <string name="timer_desc">Time</string>
+
+    <string name="label_status">STATUS</string>
+    <string name="label_voltage">Voltage</string>
+    <string name="label_current">Current</string>
+    <string name="label_temperature">Temperature</string>
+    <string name="label_power">Power</string>
+    <string name="label_capacity">Capacity</string>
+    <string name="label_time">Time</string>
+
+    <string name="unit_volt">V</string>
+    <string name="unit_milliampere">mA</string>
+    <string name="unit_celsius">°C</string>
+    <string name="unit_watt">W</string>
+    <string name="unit_milliampere_hour">mAh</string>
+    <string name="unit_milliampere_hour_per_min">mAh/m</string>
+    <string name="unit_second">s</string>
+
+    <string name="charging">Charging</string>
+    <string name="using">Using</string>
 </resources>

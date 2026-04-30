@@ -42,7 +42,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="STATUS"
+                    android:text="@string/label_status"
                     android:textColor="@color/textPrimary"
                     android:textSize="12sp"
                     android:textAllCaps="true"/>
@@ -72,6 +72,14 @@
                 android:orientation="vertical"
                 android:gravity="end">
 
+                <TextView
+                    android:id="@+id/percentage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="100%"
+                    android:textSize="28sp"
+                    android:textColor="@color/textPrimary"
+                    android:textStyle="bold"/>
 
             </LinearLayout>
         </LinearLayout>
@@ -121,8 +129,8 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Voltage"
-                        android:textColor="@color/dark_gray"
+                        android:text="@string/label_voltage"
+                            android:textColor="@color/dark_gray"
                         android:textSize="14sp" />
                 </LinearLayout>
                 <LinearLayout
@@ -143,7 +151,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="V"
+                        android:text="@string/unit_volt"
                         android:textSize="16sp"
                         android:textColor="@color/textSecondary"
                         android:layout_marginStart="4dp"/>
@@ -184,9 +192,9 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Current"
-                        android:textColor="@color/dark_gray"
-                        android:textSize="14sp" />
+                        android:text="@string/label_current"
+                            android:textColor="@color/dark_gray"
+                            android:textSize="14sp" />
                 </LinearLayout>
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -206,7 +214,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="mA"
+                        android:text="@string/unit_milliampere"
                         android:textSize="16sp"
                         android:textColor="@color/textSecondary"
                         android:layout_marginStart="4dp"/>
@@ -250,7 +258,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Temperature"
+                        android:text="@string/label_temperature"
                         android:textColor="@color/dark_gray"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -274,7 +282,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
-                        android:text="°C"
+                        android:text="@string/unit_celsius"
                         android:textColor="@color/textSecondary"
                         android:textSize="16sp" />
                 </LinearLayout>
@@ -308,16 +316,15 @@
                         android:layout_height="40dp"
                         android:layout_marginBottom="8dp"
                         android:src="@drawable/ic_power"
-                        android:contentDescription="@string/temperature_desc"
+                        android:contentDescription="@string/power_desc"
                         app:tint="@color/iconPrimary" />
-                    <!--
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Power"
+                        android:text="@string/label_power"
                         android:textColor="@color/dark_gray"
                         android:textSize="14sp" />
-                    -->
                 </LinearLayout>
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -382,7 +389,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Capacity"
+                        android:text="@string/label_capacity"
                         android:textColor="@color/dark_gray"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -406,7 +413,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
-                        android:text="mAh"
+                        android:text="@string/unit_milliampere_hour"
                         android:textColor="@color/textSecondary"
                         android:textSize="16sp" />
                 </LinearLayout>
@@ -442,14 +449,14 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_marginBottom="8dp"
-                        android:contentDescription="@string/capacity_desc"
+                        android:contentDescription="@string/timer_desc"
                         android:src="@drawable/ic_timer"
                         app:tint="@color/iconPrimary" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Time"
+                        android:text="@string/label_time"
                         android:textColor="@color/dark_gray"
                         android:textSize="14sp" />
                 </LinearLayout>
@@ -473,7 +480,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
-                        android:text="s"
+                        android:text="@string/unit_second"
                         android:textColor="@color/textSecondary"
                         android:textSize="16sp" />
                 </LinearLayout>

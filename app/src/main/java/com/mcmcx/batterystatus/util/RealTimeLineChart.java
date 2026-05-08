@@ -19,6 +19,7 @@ public class RealTimeLineChart extends View {
     private final Paint _fillPaint;
     private final Paint _labelPaint;
     private final Paint _valuePaint;
+    private final Paint _titlePaint;
 
     private final Rect _textBounds = new Rect();
 
@@ -59,6 +60,11 @@ public class RealTimeLineChart extends View {
         _valuePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         _valuePaint.setColor(0xFF424242);
         _valuePaint.setTextSize(dpToPx(11));
+
+        _titlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        _titlePaint.setColor(0xFF616161);
+        _titlePaint.setTextSize(dpToPx(12));
+        _titlePaint.setFakeBoldText(true);
     }
 
     public void setDurationSeconds(int seconds) {
@@ -91,13 +97,15 @@ public class RealTimeLineChart extends View {
 
         float padLeft = dpToPx(44);
         float padRight = dpToPx(12);
-        float padTop = dpToPx(16);
+        float padTop = dpToPx(36);
         float padBottom = dpToPx(24);
 
         float chartLeft = padLeft;
         float chartRight = width - padRight;
         float chartTop = padTop;
         float chartBottom = height - padBottom;
+
+        drawTitle(canvas, width);
 
         pruneOld();
 
@@ -232,6 +240,12 @@ public class RealTimeLineChart extends View {
         String text = String.format("%.1f %s", value, _unit);
         _valuePaint.getTextBounds(text, 0, text.length(), _textBounds);
         canvas.drawText(text, chartRight - _textBounds.width(), chartTop - dpToPx(4), _valuePaint);
+    }
+
+    private void drawTitle(Canvas canvas, float width) {
+        String title = _label + " · 最近5分钟数据";
+        _titlePaint.getTextBounds(title, 0, title.length(), _textBounds);
+        canvas.drawText(title, (width - _textBounds.width()) / 2f, dpToPx(18), _titlePaint);
     }
 
     private void drawEmptyHint(Canvas canvas, float width, float height) {

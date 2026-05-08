@@ -270,6 +270,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        _chart.invalidate();
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         unregisterReceiver(_batteryReceiver);
@@ -295,6 +301,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             _voltage.setText(String.format("%.3f", info.getVoltage()));
             _current.setText(String.format("%.1f", info.getAbsCurrent()));
+            if (info.isCharging()) {
+                _current.setTextColor(0xFF2E7D32);
+            } else if (info.getCurrent() < 0) {
+                _current.setTextColor(0xFFFF6D00);
+            } else {
+                _current.setTextColor(getColor(R.color.textSecondary));
+            }
             _temperature.setText(String.format("%.1f", info.getTemperature()));
             _capacity.setText(String.format("%d", info.getCapacity()));
             _percentage.setText(String.format("%.0f%%", info.getPercentage()));

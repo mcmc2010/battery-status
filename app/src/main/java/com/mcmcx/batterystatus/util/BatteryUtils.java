@@ -16,7 +16,8 @@ public class BatteryUtils {
      * 读取瞬时电流 (mA)。
      * 优先使用 CURRENT_NOW，不可用时降级到 CURRENT_AVERAGE，再不可用返回 0。
      * 部分设备返回的原始值单位不统一（规范要求 µA，实际有 mA 的情况），
-     * 通过阈值判断：|raw| &lt; 1000 视为已是 mA，否则从 µA 转换。
+     * 通过阈值判断：|raw| &lt; 10000 视为已是 mA，否则从 µA 转换。
+     * 10000µA = 10mA，低于此值的电流在任何正常场景都几乎不可能出现。
      */
     public static double readCurrentMA(BatteryManager manager) {
         long raw = manager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
@@ -27,9 +28,18 @@ public class BatteryUtils {
             }
         }
 
+        // 处理单位不统一的情况
+        // 其他设备可能两者都返回 µA
         long absRaw = Math.abs(raw);
-        if (absRaw < 1000) {
-            return raw; // already in mA
+        // OnePlus 7 Pro 在 Android 13 上 CURRENT_NOW 返回 mA
+        // 单位：10mA，10000µA
+        if(absRaw < 2000) {
+            raw = (long)(raw * 10.0 * 1000); // mA → µA
+        }
+        // 如果绝对值小于 20000
+        // 单位是 1 mA，1000µA
+        else if (absRaw < 20000) {
+            raw = (long)(raw * 1.0 * 1000); // mA → µA
         }
         return raw / 1000.0; // µA → mA
     }

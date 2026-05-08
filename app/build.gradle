@@ -19,7 +19,7 @@ android {
 
 
         //
-        versionCode 1005
+        versionCode 1007
         versionName "1.01"
     }
 
@@ -32,6 +32,12 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "${rootProject.name}-${variant.versionName}_${variant.versionCode}${variant.buildType.name == 'release' ? '' : '-debug'}.apk"
+        }
     }
 }
 

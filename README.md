@@ -62,7 +62,11 @@ app/src/main/res/
 
 ## 注意事项
 
-- **电流单位检测** (`BatteryUtils.readCurrentMA`)：`BATTERY_PROPERTY_CURRENT_NOW` 规范要求返回 µA，但部分厂商不遵循规范直接返回 mA。代码通过阈值判断：`|raw| < 1000` 视为已是 mA，否则从 µA 转换。
+- **电流单位检测** (`BatteryUtils.readCurrentMA`)：`BATTERY_PROPERTY_CURRENT_NOW` 规范要求返回 µA，但不同厂商实现不一致。通过三段阈值判断原始值单位：
+  - `|raw| < 2000` → 10mA 单位（如 OnePlus 7 Pro），转换 `×10×1000`
+  - `2000 ≤ |raw| < 20000` → 1mA 单位，转换 `×1×1000`
+  - `|raw| ≥ 20000` → µA 单位（规范），不乘
+  最终统一 `/1000` 得到 mA。
 - **容量单位转换** (`BatteryUtils.readCapacityMAh`)：`BATTERY_PROPERTY_CHARGE_COUNTER` 返回 µAh，需除以 1000 转为 mAh。
 - **电流降级**：`CURRENT_NOW` → `CURRENT_AVERAGE` 自动降级，两者都不可用时返回 0。
 

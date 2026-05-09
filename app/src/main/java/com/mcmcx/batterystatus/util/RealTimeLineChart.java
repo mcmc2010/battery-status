@@ -243,7 +243,8 @@ public class RealTimeLineChart extends View {
     }
 
     private void drawTitle(Canvas canvas, float width) {
-        String title = _label + " · 最近5分钟数据";
+        int minutes = _durationSeconds / 60;
+        String title = _label + " · 最近" + minutes + "分钟数据";
         _titlePaint.getTextBounds(title, 0, title.length(), _textBounds);
         canvas.drawText(title, (width - _textBounds.width()) / 2f, dpToPx(18), _titlePaint);
     }

@@ -19,10 +19,13 @@ Android 电池状态实时监控应用，显示电压、电流、温度、功率
 ```
 app/src/main/java/com/mcmcx/batterystatus/
 ├── MainActivity.java              # 主界面（DrawerLayout + NavigationView）
+├── DataLogActivity.java           # 广播数据日志列表
 ├── data/
 │   └── model/
 │       ├── BatteryInfo.java       # 电池数据模型
+│       ├── BatteryLogEntry.java   # 日志条目模型
 │       ├── DataPoint.java         # 数据点模型（时间戳+值）
+│       ├── DataLogger.java        # 广播日志记录器（单例，30分钟窗口）
 │       └── DataRecorder.java      # 数据记录器（三组数据并行记录）
 └── util/
     ├── BatteryUtils.java          # 工具类（电流读取、健康状态映射）
@@ -31,6 +34,8 @@ app/src/main/java/com/mcmcx/batterystatus/
 app/src/main/res/
 ├── layout/
 │   ├── activity_main.xml          # 主布局（DrawerLayout + Toolbar + cards）
+│   ├── activity_data_log.xml      # 数据日志列表布局
+│   ├── item_battery_log.xml       # 日志列表项布局
 │   └── nav_header.xml             # 导航菜单头部
 ├── menu/
 │   └── navigation_menu.xml        # 导航菜单项（Home/Settings/About）
@@ -52,6 +57,7 @@ app/src/main/res/
 - 电池健康状态（含颜色指示）
 - 充电/放电状态 + 时段计时
 - 实时图表（电压/电流/温度，点击卡片切换折线图）
+- 广播数据日志（侧边菜单进入，查看最近30分钟原始数据）
 
 ### 工程特性
 - 暗色模式适配 (DayNight)
@@ -97,6 +103,7 @@ app/src/main/res/
 | 电池健康状态 | P0 | ✅ 已完成 |
 | 充电技术检测 | P1 | ✅ 已完成 |
 | 实时图表 | P1 | ✅ 已完成（电压/电流/温度，点击卡片切换） |
+| 广播数据日志 | P2 | ✅ 已完成（查看最近30分钟广播原始数据） |
 | 电池历史记录 | P2 | 待开发 |
 | 设置页面 | P2 | 待开发 |
 | 充放电通知 | P2 | 待开发 |

@@ -25,6 +25,8 @@ import android.widget.Toast;
 
 import com.google.android.material.navigation.NavigationView;
 import com.mcmcx.batterystatus.data.model.BatteryInfo;
+import com.mcmcx.batterystatus.data.model.BatteryLogEntry;
+import com.mcmcx.batterystatus.data.model.DataLogger;
 import com.mcmcx.batterystatus.data.model.DataRecorder;
 import com.mcmcx.batterystatus.util.BatteryUtils;
 import com.mcmcx.batterystatus.util.RealTimeLineChart;
@@ -33,7 +35,10 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
+    public static final String TAG_NAME = "BTS-MAIN";
     public static final String BATTERY_STATUS_UPDATE = "com.mcmcx.batterystatus.BATTERY_STATUS_UPDATE";
+    private static MainActivity _instance = null;
+    public static MainActivity getInstance() { return _instance; }
 
     private DrawerLayout _drawerLayout;
     private NavigationView _navView;
@@ -74,6 +79,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        MainActivity._instance = this;
+
         setTheme(R.style.Theme_BatteryStatus);
         setContentView(R.layout.activity_main);
 
@@ -117,6 +124,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         _cardTemperature.setOnClickListener(v -> switchChart(DataRecorder.Metric.TEMPERATURE));
 
         _chart = findViewById(R.id.chart_temperature);
+        _chart.setDurationSeconds(1800);
 
         _chart.setSeries(_dataRecorder.getSeries(_selectedMetric),
                 getString(R.string.label_temperature),
@@ -201,6 +209,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_about) {
             Toast.makeText(this, R.string.nav_about, Toast.LENGTH_SHORT).show();
             _drawerLayout.closeDrawers();
+        } else if (id == R.id.nav_data_log) {
+            startActivity(new Intent(this, DataLogActivity.class));
+            _drawerLayout.closeDrawers();
         }
 
         return true;
@@ -234,6 +245,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
                 info.setCurrent(BatteryUtils.readCurrentMA(batteryManager));
                 info.setCapacity(BatteryUtils.readCapacityMAh(batteryManager));
+
+                DataLogger.getInstance().add(new BatteryLogEntry(
+                        System.currentTimeMillis(), status, info.isCharging(),
+                        level, scale, info.getPercentage(),
+                        info.getVoltage(), info.getCurrent(), info.getTemperature(),
+                        info.getHealth(), info.getPlugged(), info.getCapacity()));
+
+                _dataRecorder.recordVoltage((float) info.getVoltage());
+                _dataRecorder.recordCurrent((float) info.getAbsCurrent());
+                _dataRecorder.recordTemperature(info.getTemperature());
+                _chart.invalidate();
 
                 Intent intentUpdate = new Intent(BATTERY_STATUS_UPDATE);
                 intentUpdate.putExtra("status", info.getStatus());
@@ -269,14 +291,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
+
+        Log.i(MainActivity.TAG_NAME, "Resume main activity");
+
         _chart.invalidate();
     }
 
     @Override
     public void onDestroy() {
+        MainActivity._instance = null;
         super.onDestroy();
         unregisterReceiver(_batteryReceiver);
         unregisterReceiver(_batteryStatusUpdateReceiver);
@@ -311,14 +338,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             _temperature.setText(String.format("%.1f", info.getTemperature()));
             _capacity.setText(String.format("%d", info.getCapacity()));
             _percentage.setText(String.format("%.0f%%", info.getPercentage()));
-
-            _dataRecorder.recordVoltage((float) info.getVoltage());
-            _dataRecorder.recordCurrent((float) info.getAbsCurrent());
-            _dataRecorder.recordTemperature(info.getTemperature());
-
-            if (_chart.getVisibility() == View.VISIBLE) {
-                _chart.invalidate();
-            }
 
             int healthResId = BatteryUtils.getHealthStringResId(info.getHealth());
             if (healthResId != 0) {

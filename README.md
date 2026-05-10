@@ -26,7 +26,9 @@ app/src/main/java/com/mcmcx/batterystatus/
 │       ├── BatteryLogEntry.java   # 日志条目模型
 │       ├── DataPoint.java         # 数据点模型（时间戳+值）
 │       ├── DataLogger.java        # 广播日志记录器（单例，30分钟窗口）
-│       └── DataRecorder.java      # 数据记录器（三组数据并行记录）
+│       └── DataRecorder.java      # 数据记录器（三组数据并行记录，单例）
+├── service/
+│   └── BatteryMonitorService.java # 前台服务（系统广播 + 数据记录 + 通知栏）
 └── util/
     ├── BatteryUtils.java          # 工具类（电流读取、健康状态映射）
     └── RealTimeLineChart.java     # 实时折线图自定义 View（支持数据源切换）
@@ -52,7 +54,7 @@ app/src/main/res/
 ### 核心监控
 - 电池电压 / 电流 / 温度
 - 充电功率 (W) / 放电速率 (mAh/m)
-- 充电技术检测（AC/USB/Wireless/Dock）
+- 充电技术检测（AC/USB/Wireless/Dock） + 充电器瓦数估算
 - 剩余容量 (mAh) / 电池百分比
 - 电池健康状态（含颜色指示）
 - 充电/放电状态 + 时段计时
@@ -68,11 +70,11 @@ app/src/main/res/
 
 ## 注意事项
 
-- **电流单位检测** (`BatteryUtils.readCurrentMA`)：`BATTERY_PROPERTY_CURRENT_NOW` 规范要求返回 µA，但不同厂商实现不一致。通过三段阈值判断原始值单位：
-  - `|raw| < 2000` → 10mA 单位（如 OnePlus 7 Pro），转换 `×10×1000`
+- **电流单位检测** (`BatteryUtils.readCurrentMA`)：`BATTERY_PROPERTY_CURRENT_NOW` 规范要求返回 µA，但实测不同厂商实现不一致。通过三段阈值判断原始值单位（已校准）：
+  - `|raw| < 2000` → 2mA 单位，转换 `×2×1000`
   - `2000 ≤ |raw| < 20000` → 1mA 单位，转换 `×1×1000`
-  - `|raw| ≥ 20000` → µA 单位（规范），不乘
-  最终统一 `/1000` 得到 mA。
+  - `|raw| ≥ 20000` → µA 单位（规范），不转换
+  后统一 `/1000` 得到 mA。
 - **容量单位转换** (`BatteryUtils.readCapacityMAh`)：`BATTERY_PROPERTY_CHARGE_COUNTER` 返回 µAh，需除以 1000 转为 mAh。
 - **电流降级**：`CURRENT_NOW` → `CURRENT_AVERAGE` 自动降级，两者都不可用时返回 0。
 
@@ -94,6 +96,7 @@ app/src/main/res/
 | Power 标题 | ✅ 补全被注释掉的标签 |
 | 项目结构重构 | ✅ BatteryInfo 模型 + BatteryUtils 工具类 |
 | 左侧导航菜单 | ✅ DrawerLayout + NavigationView |
+| 前台后台分离 | ✅ ForegroundService + 通知栏常驻（API 34 dataSync） |
 
 ### 第二阶段 v1.2 — 进行中
 
@@ -102,6 +105,7 @@ app/src/main/res/
 | 左侧导航菜单 | P0 | ✅ 已完成 |
 | 电池健康状态 | P0 | ✅ 已完成 |
 | 充电技术检测 | P1 | ✅ 已完成 |
+| 充电器瓦数估算 | P2 | ✅ 已完成（双电芯分压检测，自动估算充电功率） |
 | 实时图表 | P1 | ✅ 已完成（电压/电流/温度，点击卡片切换） |
 | 广播数据日志 | P2 | ✅ 已完成（查看最近30分钟广播原始数据） |
 | 电池历史记录 | P2 | 待开发 |

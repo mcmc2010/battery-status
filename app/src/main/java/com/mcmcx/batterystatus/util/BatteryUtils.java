@@ -15,9 +15,11 @@ public class BatteryUtils {
     /**
      * 读取瞬时电流 (mA)。
      * 优先使用 CURRENT_NOW，不可用时降级到 CURRENT_AVERAGE，再不可用返回 0。
-     * 部分设备返回的原始值单位不统一（规范要求 µA，实际有 mA 的情况），
-     * 通过阈值判断：|raw| &lt; 10000 视为已是 mA，否则从 µA 转换。
-     * 10000µA = 10mA，低于此值的电流在任何正常场景都几乎不可能出现。
+     * 实测发现不同设备返回的原始值单位不统一（规范要求 µA，实际有 2mA/1mA 的情况），
+     * 通过三段阈值判断并统一转换为 µA，最终 /1000 得到 mA：
+     *   |raw| &lt; 2000  → 2mA 单位，转换 ×2×1000
+     *   2000 ≤ |raw| &lt; 20000 → 1mA 单位，转换 ×1×1000
+     *   |raw| ≥ 20000 → µA 单位（规范），不转换
      */
     public static double readCurrentMA(BatteryManager manager) {
         long raw = manager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
@@ -28,13 +30,12 @@ public class BatteryUtils {
             }
         }
 
-        // 处理单位不统一的情况
+        // 处理单位不统一的情况（以下阈值基于实测校准）
         // 其他设备可能两者都返回 µA
         long absRaw = Math.abs(raw);
-        // OnePlus 7 Pro 在 Android 13 上 CURRENT_NOW 返回 mA
-        // 单位：10mA，10000µA
+        // OnePlus 7 Pro (Android 13) CURRENT_NOW 返回 2mA 为单位的值
         if(absRaw < 2000) {
-            raw = (long)(raw * 10.0 * 1000); // mA → µA
+            raw = (long)(raw * 2.0 * 1000); // mA → µA
         }
         // 如果绝对值小于 20000
         // 单位是 1 mA，1000µA
@@ -55,6 +56,28 @@ public class BatteryUtils {
             return 0;
         }
         return capacity / 1000;
+    }
+
+    /**
+     * 估算充电器功率 (W)。
+     * 双电芯检测：电压 &lt; 4.5V 视为双电芯，充电电压 ≈ 电池电压 × 2。
+     * 单电芯直接用电池电压计算。
+     */
+    public static double estimateChargerWattage(double voltage, double currentMA, boolean isCharging) {
+        if (!isCharging) return 0;
+
+        double absCurrent = Math.abs(currentMA);
+        if (absCurrent == 0) return 0;
+
+        double chargerVoltage;
+
+        if (voltage < 4.5) {
+            chargerVoltage = voltage * 2.0;
+        } else {
+            chargerVoltage = voltage;
+        }
+
+        return chargerVoltage * absCurrent / 1000.0;
     }
 
     /**

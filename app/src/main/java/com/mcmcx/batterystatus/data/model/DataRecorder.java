@@ -6,11 +6,19 @@ public class DataRecorder {
 
     public enum Metric { VOLTAGE, CURRENT, TEMPERATURE }
 
+    private static final DataRecorder INSTANCE = new DataRecorder();
     private static final int MAX_POINTS = 300;
+
+    public static DataRecorder getInstance() {
+        return INSTANCE;
+    }
 
     private final LinkedList<DataPoint> _voltageData = new LinkedList<>();
     private final LinkedList<DataPoint> _currentData = new LinkedList<>();
     private final LinkedList<DataPoint> _temperatureData = new LinkedList<>();
+
+    private DataRecorder() {
+    }
 
     public void recordVoltage(float value) {
         record(value, _voltageData);

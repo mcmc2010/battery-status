@@ -38,6 +38,8 @@
     <string name="plugged_wireless">Wireless</string>
     <string name="plugged_dock">Dock</string>
     <string name="charging_format">Charging (%s)</string>
+    <string name="charging_format_watt">Charging (%1$s) · %2$.0fW</string>
+    <string name="charging_watt">Charging · %.0fW</string>
 
     <string name="app_subtitle">Battery Monitor</string>
     <string name="nav_home">Home</string>
@@ -46,4 +48,6 @@
     <string name="nav_data_log">Data Log</string>
     <string name="nav_open">Open menu</string>
     <string name="nav_close">Close menu</string>
+    <string name="channel_name">Battery Monitor</string>
+    <string name="channel_desc">Persistent notification for battery monitoring</string>
 </resources>

@@ -7,10 +7,12 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -25,9 +27,8 @@ import android.widget.Toast;
 
 import com.google.android.material.navigation.NavigationView;
 import com.mcmcx.batterystatus.data.model.BatteryInfo;
-import com.mcmcx.batterystatus.data.model.BatteryLogEntry;
-import com.mcmcx.batterystatus.data.model.DataLogger;
 import com.mcmcx.batterystatus.data.model.DataRecorder;
+import com.mcmcx.batterystatus.service.BatteryMonitorService;
 import com.mcmcx.batterystatus.util.BatteryUtils;
 import com.mcmcx.batterystatus.util.RealTimeLineChart;
 
@@ -84,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setTheme(R.style.Theme_BatteryStatus);
         setContentView(R.layout.activity_main);
 
-        _dataRecorder = new DataRecorder();
+        _dataRecorder = DataRecorder.getInstance();
 
         _drawerLayout = findViewById(R.id.drawer_layout);
         _navView = findViewById(R.id.nav_view);
@@ -133,11 +134,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         _icon_status.setImageResource(R.drawable.ic_battery);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0);
+            }
+        }
+
+        Intent serviceIntent = new Intent(this, BatteryMonitorService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            registerReceiver(_batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED), RECEIVER_NOT_EXPORTED);
             registerReceiver(_batteryStatusUpdateReceiver, new IntentFilter(BATTERY_STATUS_UPDATE), RECEIVER_EXPORTED);
         } else {
-            registerReceiver(_batteryReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
             registerReceiver(_batteryStatusUpdateReceiver, new IntentFilter(BATTERY_STATUS_UPDATE));
         }
 
@@ -217,64 +230,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    private final BroadcastReceiver _batteryReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            try {
-                BatteryInfo info = new BatteryInfo();
-
-                int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                info.setStatus(status);
-                info.setCharging(status == BatteryManager.BATTERY_STATUS_CHARGING
-                        || status == BatteryManager.BATTERY_STATUS_FULL);
-
-                int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-                int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 1);
-                info.setPercentage((level / (float) scale) * 100f);
-
-                int voltage = intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE, 0);
-                info.setVoltage(voltage / 1000.0);
-
-                int temperature = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 0);
-                info.setTemperature(temperature / 10.0f);
-
-                info.setHealth(intent.getIntExtra(BatteryManager.EXTRA_HEALTH,
-                        BatteryManager.BATTERY_HEALTH_UNKNOWN));
-                info.setPlugged(intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0));
-
-                BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-                info.setCurrent(BatteryUtils.readCurrentMA(batteryManager));
-                info.setCapacity(BatteryUtils.readCapacityMAh(batteryManager));
-
-                DataLogger.getInstance().add(new BatteryLogEntry(
-                        System.currentTimeMillis(), status, info.isCharging(),
-                        level, scale, info.getPercentage(),
-                        info.getVoltage(), info.getCurrent(), info.getTemperature(),
-                        info.getHealth(), info.getPlugged(), info.getCapacity()));
-
-                _dataRecorder.recordVoltage((float) info.getVoltage());
-                _dataRecorder.recordCurrent((float) info.getAbsCurrent());
-                _dataRecorder.recordTemperature(info.getTemperature());
-                _chart.invalidate();
-
-                Intent intentUpdate = new Intent(BATTERY_STATUS_UPDATE);
-                intentUpdate.putExtra("status", info.getStatus());
-                intentUpdate.putExtra("is_charging", info.isCharging());
-                intentUpdate.putExtra("voltage", info.getVoltage());
-                intentUpdate.putExtra("current", info.getCurrent());
-                intentUpdate.putExtra("temperature", info.getTemperature());
-                intentUpdate.putExtra("percentage", info.getPercentage());
-                intentUpdate.putExtra("health", info.getHealth());
-                intentUpdate.putExtra("plugged", info.getPlugged());
-                intentUpdate.putExtra("capacity", info.getCapacity());
-
-                context.sendBroadcast(intentUpdate);
-            } catch (Exception e) {
-                Log.e("batterystatus", e.getMessage());
-            }
-        }
-    };
-
     protected void OnTimeUpdate() {
         if (_timestamp_start > 0) {
             long time = System.currentTimeMillis() - _timestamp_start;
@@ -305,7 +260,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onDestroy() {
         MainActivity._instance = null;
         super.onDestroy();
-        unregisterReceiver(_batteryReceiver);
         unregisterReceiver(_batteryStatusUpdateReceiver);
         _handler.removeCallbacks(_updateTimeRunnable);
     }
@@ -359,11 +313,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 _icon_status.setImageResource(R.drawable.ic_battery_charging);
 
                 int pluggedResId = BatteryUtils.getPluggedStringResId(info.getPlugged());
+                double wattage = BatteryUtils.estimateChargerWattage(
+                        info.getVoltage(), info.getCurrent(), info.isCharging());
+
                 if (pluggedResId != 0) {
-                    _status_charging.setText(getString(R.string.charging_format,
-                            getString(pluggedResId)));
+                    _status_charging.setText(getString(R.string.charging_format_watt,
+                            getString(pluggedResId), wattage));
                 } else {
-                    _status_charging.setText(R.string.charging);
+                    _status_charging.setText(getString(R.string.charging_watt, wattage));
                 }
             } else {
                 if (_is_charging) {
